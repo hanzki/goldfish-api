@@ -1,0 +1,16 @@
+{
+  "name": "goldfish-api",
+  "version": "1.0.0",
+  "description": "Backend API for the Reflections of Goldfish blog",
+  "main": "comments.js",
+  "dependencies": {
+    "moment": "^2.24.0",
+    "npm": "^6.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hannu Huhtanen",
+  "license": "ISC"
+}

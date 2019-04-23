@@ -20,6 +20,19 @@ service: goldfish-api # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs8.10
+  region: eu-west-1
+  environment:
+        DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -56,11 +69,32 @@ provider:
 
 functions:
   hello:
+    handler: comments.hello
+    events:
+      - http:
+          path: hello
+          method: get
+      - http:
+          path: hello
+          method: post
+
+  listComments:
     handler: comments.listComments
     events:
       - http:
           path: posts/{postId}/comments
           method: get
+          request:
+            parameters:
+              paths:
+                postId: true
+
+  createComment:
+    handler: comments.createComment
+    events:
+      - http:
+          path: posts/{postId}/comments
+          method: post
           request:
             parameters:
               paths:
@@ -101,13 +135,22 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+resources:
+  Resources:
+    commentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: post_id
+            AttributeType: N
+          - AttributeName: comment_timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: post_id
+            KeyType: HASH
+          - AttributeName: comment_timestamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
