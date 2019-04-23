@@ -56,7 +56,15 @@ provider:
 
 functions:
   hello:
-    handler: handler.hello
+    handler: comments.listComments
+    events:
+      - http:
+          path: posts/{postId}/comments
+          method: get
+          request:
+            parameters:
+              paths:
+                postId: true
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
