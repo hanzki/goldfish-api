@@ -1,7 +1,5 @@
 'use strict';
-const AWS = require('aws-sdk');
-const client = new AWS.DynamoDB.DocumentClient();
-const moment = require('moment');
+const dynamodb = require('./dynamodb');
 
 module.exports.hello = async (event) => {
 
@@ -18,23 +16,13 @@ module.exports.hello = async (event) => {
 module.exports.listComments = async (event) => {
 
   const postId = Number(event.pathParameters.postId);
-
-  const params = {
-    TableName: process.env.DYNAMODB_TABLE,
-    KeyConditionExpression: 'post_id = :pid',
-    ExpressionAttributeValues: {
-      ':pid': postId
-    },
-    ProjectionExpression: 'post_id, comment_timestamp, comment_author, comment_content'
-  };
-
-  const comments = await client.query(params).promise();
+  const comments = await dynamodb.listComments(postId);
 
   return {
     statusCode: 200,
     body: JSON.stringify({
       message: 'Here are your comments',
-      comments: comments.Items,
+      comments: comments,
     }, null, 2),
   };
 
@@ -44,26 +32,18 @@ module.exports.createComment = async (event) => {
 
   const postId = Number(event.pathParameters.postId);
   const input = JSON.parse(event.body);
-  const commentContent = input.comment;
-  const commentAuthor = input.author || "Anonymous";
-
-  const params = {
-    TableName: process.env.DYNAMODB_TABLE,
-    Item: {
-      post_id: postId,
-      comment_timestamp: moment().toISOString(),
-      comment_author: commentAuthor,
-      comment_content: commentContent
-    }
+  const comment = {
+    author: input.author || "Anonymous",
+    content: input.comment
   };
 
-  await client.put(params).promise();
+  const newComment = await dynamodb.createComment(postId, comment);
 
   return {
     statusCode: 201,
     body: JSON.stringify({
       message: 'Created a new comment',
-      comment: params.Item,
+      comment: newComment,
     }, null, 2),
   };
 
