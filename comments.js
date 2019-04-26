@@ -20,6 +20,9 @@ module.exports.listComments = async (event) => {
 
   return {
     statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
     body: JSON.stringify({
       message: 'Here are your comments',
       comments: comments,
@@ -41,6 +44,9 @@ module.exports.createComment = async (event) => {
 
   return {
     statusCode: 201,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
     body: JSON.stringify({
       message: 'Created a new comment',
       comment: newComment,
